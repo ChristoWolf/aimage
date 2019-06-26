@@ -20,8 +20,8 @@ class RestAPI:
 
     def __defineRESTAPI(self):
         @self.app.route("/", methods=["GET"])
-        def home():
-            return "AImage REST API"
+        def render_home():
+            return render_template("home.html")
 
         @self.app.route("/images/<filename>", methods=["GET"])
         def imagesEndpointGetSingle(filename):
