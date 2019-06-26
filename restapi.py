@@ -1,4 +1,6 @@
 from flask import *
+from flask_restful import Api
+from flask_restful_swagger import swagger
 from werkzeug.utils import secure_filename
 import os
 import uuid
@@ -13,15 +15,18 @@ class RestAPI:
         self.app.config["UPLOAD_FOLDER"] = uploadFolder  # TODO: check if folder makes sense
         self.allowedExtensions = set(['png', 'jpg', 'jpeg'])  # extend allowed extensions
         self.app.url_map.strict_slashes = False
+        self.api_doc_url = "/api"
+        self.api_doc = swagger.docs(Api(self.app), apiVersion="1", api_spec_url="/api")  # TODO: make it work
         self.__defineRESTAPI()
 
     def runRestAPI(self):
         self.app.run(host="localhost", port=self.port)
 
     def __defineRESTAPI(self):
-        @self.app.route("/", methods=["GET"])
+        @self.app.route("/")
         def render_home():
-            return render_template("home.html")
+            url = request.host_url
+            return render_template("home.html").replace("$URL$", url + "api/")
 
         @self.app.route("/images/<filename>", methods=["GET"])
         def imagesEndpointGetSingle(filename):
