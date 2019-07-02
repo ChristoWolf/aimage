@@ -16,6 +16,8 @@ class RestAPI:
         self.app.url_map.strict_slashes = False
         self.swagger_config = {
             "version": "0.0.1",
+            "uiversion": 3,  # needed to use OpenAPI spec
+            "openapi": "3.0.2",  # needed to use OpenAPI spec
             "title": "AImage REST API Documentation",
             "headers": [
             ],
@@ -44,13 +46,41 @@ class RestAPI:
             url = request.host_url
             return render_template("home.html").replace("$URL$", url + "api/")
 
-        @self.app.route("/images/<filename>", methods=["GET"])
-        def imagesEndpointGetSingle(filename):
-            return send_from_directory(self.app.config["UPLOAD_FOLDER"], filename + ".png")
+        @self.app.route("/images/<image_id>", methods=["GET"])
+        def imagesEndpointGetSingle(image_id):
+            """
+            summary: Get the specified resource.
+            ---
+            parameters:
+                - name: image_id
+                  in: path
+                  description: UUID of an image resource.
+                  required: true
+                  schema:
+                    type: string
+            responses:
+                '200':
+                    description: Returns the requested image resource.
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    image_id:
+                                        type: string
+                                        description: UUID of the image resource.
+                    links:
+                        self:
+                            description: Link to the specified resource.
+                            operationId: GET
+                            parameters:
+                                image_id: '$response.body#/image_id'
+            """
+            return send_from_directory(self.app.config["UPLOAD_FOLDER"], image_id + ".png")
 
-        @self.app.route("/images/<filename>", methods=["DELETE"])
-        def imagesEndpointDeleteSingle(filename):
-            fileName = secure_filename(filename)
+        @self.app.route("/images/<image_id>", methods=["DELETE"])
+        def imagesEndpointDeleteSingle(image_id):
+            fileName = secure_filename(image_id)
             if not os.path.isdir(self.app.config['UPLOAD_FOLDER']):
                 os.makedirs(self.app.config['UPLOAD_FOLDER'])
                 abort(404)
@@ -85,17 +115,17 @@ class RestAPI:
                 return ""
             return "\n".join(images)
 
-        @self.app.route("/images/<filename>/metadata", methods=["GET"])
-        def imagesEndpointGetMetadata(filename):
-            if not os.path.exists(os.path.join(self.app.config['UPLOAD_FOLDER'], filename + ".png")):
+        @self.app.route("/images/<image_id>/metadata", methods=["GET"])
+        def imagesEndpointGetMetadata(image_id):
+            if not os.path.exists(os.path.join(self.app.config['UPLOAD_FOLDER'], image_id + ".png")):
                 abort(404)
-            return filename
+            return image_id
 
-        @self.app.route("/images/<filename>/data", methods=["GET"])
-        def imagesEndpointGetData(filename):
-            if not os.path.exists(os.path.join(self.app.config['UPLOAD_FOLDER'], filename + ".png")):
+        @self.app.route("/images/<image_id>/data", methods=["GET"])
+        def imagesEndpointGetData(image_id):
+            if not os.path.exists(os.path.join(self.app.config['UPLOAD_FOLDER'], image_id + ".png")):
                 abort(404)
-            return send_from_directory(self.app.config["UPLOAD_FOLDER"], filename + ".png")
+            return send_from_directory(self.app.config["UPLOAD_FOLDER"], image_id + ".png")
 
 
     def __isImageTypeAllowed(self, contentType):
