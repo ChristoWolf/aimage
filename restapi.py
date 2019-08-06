@@ -6,8 +6,9 @@ import os
 import uuid
 
 
+# TODO: outsource schemas to JSON files and reference them remotely, see https://swagger.io/docs/specification/using-ref (Remote Reference)
+# TODO: improve hyphen-replacement  for UUIDs (i.e. keep UUID-formats in mind)
 # TODO: use appropriate responses (e.g. JSON, HTML, binary) at fitting places
-# TODO: change request handling to make more sense (e.g. GET on image endpoint should give related links instead of data)
 # TODO: use a DB to persistently save credentials and metadata (see e.g. https://docs.python.org/3/library/sqlite3.html)
 class RestAPI:
     def __init__(self, port, uploadFolder):
@@ -36,7 +37,7 @@ class RestAPI:
             "swagger_ui": True,
             "specs_route": "/api/"
         }
-        # try to put security usage in here
+        # TODO: try to put security usage in here
         self.swagger_template = {
             'components': {
                 'securitySchemes': {
@@ -78,7 +79,8 @@ class RestAPI:
             """
             Get the specified image resource.
             ---
-            operationId: GET
+            tags:
+                - GET
             parameters:
                 - name: image_id
                   in: path
@@ -101,9 +103,60 @@ class RestAPI:
                                     links:
                                         type: object
                                         description: Collection of links related to this resource.
+                                        properties:
+                                            self:
+                                                type: object
+                                                properties:
+                                                    href:
+                                                        type: string
+                                                        example: http://host:port/images/CB8BC8406ED14386BC4962A719B17F69
+                                                    templates:
+                                                        type: object
+                                                        properties:
+                                                            GET:
+                                                                type: object
+                                                            DELETE:
+                                                                type: object
+                                            up:
+                                                type: object
+                                                properties:
+                                                    href:
+                                                        type: string
+                                                        example: http://host:port/images
+                                                    templates:
+                                                        type: object
+                                                        properties:
+                                                            GET:
+                                                                type: object
+                                                            POST:
+                                                                type: object
+                                            metadata:
+                                                type: object
+                                                properties:
+                                                    href:
+                                                        type: string
+                                                        example: http://host:port/images/CB8BC8406ED14386BC4962A719B17F69/metadata
+                                                    templates:
+                                                        type: object
+                                                        properties:
+                                                            GET:
+                                                                type: object
+                                            data:
+                                                type: object
+                                                properties:
+                                                    href:
+                                                        type: string
+                                                        example: http://host:port/images/CB8BC8406ED14386BC4962A719B17F69/data
+                                                    templates:
+                                                        type: object
+                                                        properties:
+                                                            GET:
+                                                                type: object
+
             security:
                 - basicAuth: []
             """
+            # TODO: change logic to give JSON response as defined above
             return send_from_directory(self.app.config["UPLOAD_FOLDER"], image_id.replace("-", "").upper() + ".png")
 
         @self.app.route("/images/<image_id>", methods=["DELETE"])
